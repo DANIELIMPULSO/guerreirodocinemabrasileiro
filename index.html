@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b0810">
 <title>Guerreiro do Cinema Brasileiro</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,7 +44,7 @@
     <div id="menu-foot">
       <button id="btn-play">▶ AÇÃO!</button>
       <button id="btn-endless" class="hidden">» SESSÃO CONTÍNUA</button>
-      <span class="keys">◄ ► ▲ ▼ escolher · ESPAÇO pular · P pausa · M som</span>
+      <span class="keys"><span class="kb">◄ ► ▲ ▼ escolher · ESPAÇO pular · P pausa · M som</span><span class="tc">toque na tela para pular<br>segure para ir mais alto</span></span>
     </div>
   </div>
 
@@ -56,7 +57,7 @@
         <div id="card-title">SERTÃO</div>
         <div id="card-sub"></div>
         <div id="card-new"></div>
-        <div class="blink">ESPAÇO para rodar</div>
+        <div class="blink"><span class="kb">ESPAÇO</span><span class="tc">TOQUE</span> para rodar</div>
       </div>
     </div>
   </div>
@@ -85,10 +86,15 @@
     </div>
   </div>
 
-  <div id="pause" class="overlay hidden"><div class="big gold">PAUSA</div><div class="small">P para continuar</div></div>
+  <div id="pause" class="overlay hidden"><div class="big gold">PAUSA</div><div class="small"><span class="kb">P</span><span class="tc">toque</span> para continuar</div></div>
   <div id="toast" class="hidden"></div>
-  <div id="mute" title="Som (M)">♪</div>
+  <div id="ctl">
+    <div id="btn-pause" class="hidden" title="Pausa (P)">II</div>
+    <div id="btn-full" class="hidden" title="Tela cheia"></div>
+    <div id="mute" title="Som (M)">♪</div>
+  </div>
 </div>
+<div id="turn">↻ vire o celular</div>
 
 <script src="js/sprites.js"></script>
 <script src="js/scenes.js"></script>

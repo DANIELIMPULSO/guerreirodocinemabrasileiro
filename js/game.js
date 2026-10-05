@@ -103,7 +103,7 @@
     let ac = null, master = null, muted = store.get('mute', false), timer = null, stepN = 0, nextT = 0, playing = false;
     const hz = m => 440 * Math.pow(2, (m - 69) / 12);
     function init() {
-      if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+      if (ac) { if (ac.state !== 'running') ac.resume(); return; } // iOS volta do segundo plano como 'interrupted'
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
       try { ac = new AC(); master = ac.createGain(); master.gain.value = muted ? 0 : 1; master.connect(ac.destination); } catch (e) { ac = null; }
@@ -248,15 +248,25 @@
       $('mute').classList.toggle('off', muted);
     }
     $('mute').classList.toggle('off', muted);
-    return { init, sfx, music, toggle, tracks: TRACKS, state: () => ({ on: playing, track: cur, ctx: ac ? ac.state : 'none' }) };
+    return { init, sfx, music, toggle, wake() { if (ac) init(); }, tracks: TRACKS, state: () => ({ on: playing, track: cur, ctx: ac ? ac.state : 'none' }) };
   })();
   const sfx = audio.sfx;
 
   // ------------------------------------------------------------------
   // Telas (DOM)
   // ------------------------------------------------------------------
-  function resize() { stage.style.setProperty('--u', (stage.clientWidth / W) + 'px'); }
+  function resize() {
+    const w = stage.clientWidth;
+    stage.style.setProperty('--u', (w / W) + 'px');
+    stage.classList.toggle('compact', w < 960); // celular: textos e botões maiores
+  }
   window.addEventListener('resize', resize); resize();
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
+
+  // toque x teclado: vale o aparelho e, depois, o último gesto
+  const coarse = window.matchMedia ? window.matchMedia('(hover: none) and (pointer: coarse)') : { matches: false };
+  function setTouch(on) { stage.classList.toggle('touch', on); }
+  setTouch(coarse.matches);
 
   const fmt = n => String(Math.floor(n)).padStart(6, '0');
   let toastTimer = null;
@@ -273,6 +283,7 @@
     $('over').classList.toggle('hidden', m !== 'dead');
     $('win').classList.toggle('hidden', m !== 'win');
     $('pause').classList.add('hidden');
+    $('btn-pause').classList.toggle('hidden', m !== 'play');
     if (m !== 'play') $('toast').classList.add('hidden');
     audio.music(m === 'play' || m === 'card' || m === 'menu', S.charIdx);
     if (m === 'menu') $('btn-endless').classList.toggle('hidden', !store.get('won', false));
@@ -650,6 +661,7 @@
   }
   window.addEventListener('keydown', e => {
     const k = e.code;
+    if (!coarse.matches) setTouch(false);
     if (S.mode === 'menu' && (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown')) {
       e.preventDefault(); audio.init();
       const i = S.menuIdx;
@@ -666,13 +678,24 @@
     else if (k === 'KeyM') audio.toggle();
   });
   window.addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { P.hold = false; P.gliding = false; } });
-  stage.addEventListener('pointerdown', e => {
-    if (e.target.closest('button, .char, #mute')) return;
+  // a tela inteira é o botão de pulo, inclusive as faixas em volta do palco
+  window.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'touch') setTouch(true);
+    if (e.target.closest && e.target.closest('button, .char, #ctl')) return;
     if (S.mode === 'menu') return;
-    e.preventDefault(); P.hold = true; action();
+    e.preventDefault();
+    if (S.paused) { audio.init(); togglePause(); return; }
+    P.hold = true; action();
   });
-  window.addEventListener('pointerup', () => { P.hold = false; P.gliding = false; });
-  window.addEventListener('blur', () => { P.hold = false; if (S.mode === 'play' && !S.paused) togglePause(); });
+  const release = () => { P.hold = false; P.gliding = false; };
+  window.addEventListener('pointerup', release);
+  window.addEventListener('touchend', audio.wake, { passive: true }); // no iOS o som só destrava ao soltar o dedo
+  window.addEventListener('pointercancel', release);
+  const autoPause = () => { P.hold = false; if (S.mode === 'play' && !S.paused) togglePause(); };
+  window.addEventListener('blur', autoPause);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) autoPause(); });
+  // toque longo não abre o menu de "salvar imagem"
+  window.addEventListener('contextmenu', e => { if (stage.classList.contains('touch')) e.preventDefault(); });
 
   function btn(id, fn) { $(id).addEventListener('click', e => { e.stopPropagation(); e.currentTarget.blur(); audio.init(); fn(); }); }
   btn('btn-play', () => startFromMenu(false));
@@ -682,6 +705,18 @@
   btn('btn-win-endless', () => startRun(true));
   btn('btn-win-menu', toMenu);
   $('mute').addEventListener('click', () => { audio.init(); audio.toggle(); });
+  $('btn-pause').addEventListener('click', () => { audio.init(); togglePause(); });
+  // tela cheia (onde o navegador deixa; no iPhone não há): tenta travar em paisagem
+  const root = document.documentElement;
+  if (root.requestFullscreen && document.fullscreenEnabled) {
+    $('btn-full').classList.remove('hidden');
+    $('btn-full').addEventListener('click', () => {
+      if (document.fullscreenElement) { document.exitFullscreen(); return; }
+      root.requestFullscreen({ navigationUI: 'hide' }).then(() => {
+        if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => { /* sem trava: o palco gira sozinho */ });
+      }).catch(() => { /* recusado: segue na janela */ });
+    });
+  }
 
   // ------------------------------------------------------------------
   // Laço principal

@@ -1,16 +1,18 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: #0b0810; overflow: hidden; }
+html, body { height: 100%; background: #0b0810; overflow: hidden; overscroll-behavior: none; touch-action: none; }
 /* Press Start 2P só em títulos sem acento; o texto corrido usa Pixelify Sans,
    que desenha maiúsculas acentuadas (Í, Ú, Ã...) do tamanho certo. */
 body {
   display: flex; align-items: center; justify-content: center;
   font-family: 'Pixelify Sans', 'Press Start 2P', 'Courier New', monospace;
   color: #fff; user-select: none; -webkit-user-select: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
 }
 #stage {
   --u: 3px;
   position: relative;
   width: min(100vw, calc(100vh * 336 / 144));
+  width: min(100dvw, calc(100dvh * 336 / 144)); /* dvh: desconta a barra do navegador no celular */
   aspect-ratio: 336 / 144;
   overflow: hidden;
   background: #000;
@@ -35,7 +37,7 @@ button {
   padding: calc(var(--u) * 1.6) calc(var(--u) * 4);
   box-shadow: 0 calc(var(--u) * 1) 0 #b8860b, 0 0 0 calc(var(--u) * .6) #1a1022;
 }
-button:hover { background: #ffe680; }
+@media (hover: hover) { button:hover { background: #ffe680; } }
 button:active { transform: translateY(calc(var(--u) * 1)); box-shadow: 0 0 0 calc(var(--u) * .6) #1a1022; }
 button small { font-size: .75em; font-weight: 400; opacity: .7; }
 #btn-menu, #btn-win-menu { background: #e8e3f0; box-shadow: 0 calc(var(--u) * 1) 0 #8a8198, 0 0 0 calc(var(--u) * .6) #1a1022; }
@@ -93,7 +95,7 @@ h1 b {
 .char canvas { width: calc(var(--u) * 21.7); height: calc(var(--u) * 25); }
 .char .nm { font-size: calc(var(--u) * 3.3); font-weight: 600; white-space: nowrap; line-height: 1; }
 .char .q { font-size: calc(var(--u) * 13); color: #3ddc84; line-height: calc(var(--u) * 25); text-shadow: calc(var(--u) * 1) calc(var(--u) * 1) 0 #0b3d22; }
-.char:hover { background: rgba(255, 255, 255, .14); }
+@media (hover: hover) { .char:hover { background: rgba(255, 255, 255, .14); } }
 .char.sel { border-color: #ffd23f; background: rgba(255, 210, 63, .22); }
 .char.sel .nm { color: #ffd23f; }
 #preview {
@@ -149,5 +151,107 @@ h1 b {
   padding: calc(var(--u) * 1.6) calc(var(--u) * 3.5); font-size: calc(var(--u) * 3.9); font-weight: 600; line-height: 1.3;
   max-width: 92%; text-align: center; pointer-events: none; white-space: nowrap;
 }
-#mute { position: absolute; right: calc(var(--u) * 2); bottom: calc(var(--u) * 2); font-size: calc(var(--u) * 5); cursor: pointer; opacity: .7; text-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 #000; }
+#ctl { position: absolute; right: calc(var(--u) * 2); bottom: calc(var(--u) * 2); display: flex; gap: calc(var(--u) * 2); }
+#ctl > div { font-size: calc(var(--u) * 5); cursor: pointer; opacity: .7; text-shadow: calc(var(--u) * .5) calc(var(--u) * .5) 0 #000; }
 #mute.off { opacity: .3; text-decoration: line-through; }
+#btn-pause { font-family: 'Press Start 2P', monospace; letter-spacing: calc(var(--u) * -1); }
+#btn-full::before { /* ícone de tela cheia: quatro cantos */
+  content: ''; display: block; width: calc(var(--u) * 6.4); height: calc(var(--u) * 5);
+  --c: linear-gradient(#fff 0 0); --l: calc(var(--u) * 2.2); --t: calc(var(--u) * .9);
+  background:
+    var(--c) 0 0 / var(--l) var(--t), var(--c) 0 0 / var(--t) var(--l),
+    var(--c) 100% 0 / var(--l) var(--t), var(--c) 100% 0 / var(--t) var(--l),
+    var(--c) 0 100% / var(--l) var(--t), var(--c) 0 100% / var(--t) var(--l),
+    var(--c) 100% 100% / var(--l) var(--t), var(--c) 100% 100% / var(--t) var(--l);
+  background-repeat: no-repeat;
+}
+#turn { display: none; }
+
+/* ---------- TOQUE ----------
+   .touch entra quando o aparelho (ou o último gesto) é de toque: troca as
+   dicas de teclado e leva os controles para o canto de cima, longe dos polegares. */
+.tc { display: none; }
+#stage.touch .kb, #stage.touch button small { display: none; }
+#stage.touch .tc { display: inline; }
+#stage:not(.touch) #btn-pause, #stage:not(.touch) #btn-full { display: none; }
+#stage.touch #ctl { top: calc(var(--u) * 2); bottom: auto; }
+#stage.touch #ctl > div {
+  width: calc(var(--u) * 15); height: calc(var(--u) * 13);
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(23, 19, 31, .82); border: calc(var(--u) * .6) solid rgba(255, 255, 255, .4);
+  font-size: calc(var(--u) * 6); opacity: 1; text-shadow: none;
+}
+#stage.touch #mute.off { color: rgba(255, 255, 255, .35); }
+#stage.touch #hud { padding-right: calc(var(--u) * 55); }
+
+/* ---------- TELA PEQUENA ----------
+   .compact entra quando o palco tem menos de 960px de largura (celular):
+   mesma arte, com textos e botões maiores e o menu reorganizado. */
+#stage.compact button { font-size: calc(var(--u) * 6.4); padding: calc(var(--u) * 2.6) calc(var(--u) * 6); }
+#stage.compact .small { font-size: calc(var(--u) * 5); }
+
+#stage.compact #hud { font-size: calc(var(--u) * 5.6); padding-top: calc(var(--u) * 2); }
+#stage.compact #h-hi { font-size: calc(var(--u) * 4.6); }
+#stage.compact #h-bar { height: calc(var(--u) * 4); }
+#stage.compact #h-stock { font-size: calc(var(--u) * 5.2); }
+#stage.compact #h-stock img { height: calc(var(--u) * 8); }
+#stage.compact #toast { top: calc(var(--u) * 26); font-size: calc(var(--u) * 5); max-width: 96%; }
+
+#stage.compact #menu {
+  display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto 1fr;
+  grid-template-areas: "title title" "pick pick" "info foot";
+  padding: calc(var(--u) * 2.5) calc(var(--u) * 4); gap: calc(var(--u) * 2) calc(var(--u) * 4);
+}
+#stage.compact h1 { grid-area: title; }
+#stage.compact h1 span { font-size: calc(var(--u) * 3); }
+#stage.compact h1 b { font-size: calc(var(--u) * 6.4); }
+#stage.compact #pick { grid-area: pick; gap: calc(var(--u) * 3); }
+#stage.compact #chars { grid-template-columns: repeat(6, calc(var(--u) * 31)); gap: calc(var(--u) * 1.6); }
+#stage.compact .char { height: calc(var(--u) * 33); padding: calc(var(--u) * .8) 0; justify-content: flex-start; }
+#stage.compact .char canvas { width: calc(var(--u) * 19.9); height: calc(var(--u) * 23); flex: none; }
+#stage.compact .char .nm { font-size: calc(var(--u) * 3.7); white-space: normal; margin: auto 0; }
+#stage.compact .char .q { line-height: calc(var(--u) * 23); }
+#stage.compact #preview { flex: 1; width: auto; }
+#stage.compact #info { grid-area: info; justify-content: center; gap: calc(var(--u) * 1.2); min-width: 0; }
+#stage.compact #info-name { font-size: calc(var(--u) * 7.4); }
+#stage.compact #info-film, #stage.compact #info-quote { font-size: calc(var(--u) * 5.2); line-height: 1.1; }
+#stage.compact #info-ab { font-size: calc(var(--u) * 5.6); line-height: 1.1; }
+#stage.compact #menu-foot { grid-area: foot; flex-direction: column; justify-content: center; gap: calc(var(--u) * 3); }
+#stage.compact #btn-play { font-size: calc(var(--u) * 9); padding: calc(var(--u) * 3.4) calc(var(--u) * 10); }
+#stage.compact .keys { font-size: calc(var(--u) * 4.4); line-height: 1.2; max-width: calc(var(--u) * 84); }
+
+#stage.compact .clap { width: calc(var(--u) * 262); }
+#stage.compact .clap-body { padding: calc(var(--u) * 4) calc(var(--u) * 5); }
+#stage.compact #card-n { font-size: calc(var(--u) * 5); }
+#stage.compact #card-sub { font-size: calc(var(--u) * 5.3); line-height: 1.2; }
+#stage.compact #card-new { font-size: calc(var(--u) * 4.6); }
+#stage.compact .blink { font-size: calc(var(--u) * 5.2); }
+
+#stage.compact #over { gap: calc(var(--u) * 2); padding: calc(var(--u) * 3) calc(var(--u) * 5); }
+#stage.compact #over .big { font-size: calc(var(--u) * 10); }
+#stage.compact #over-img { height: calc(var(--u) * 18); }
+#stage.compact #over-fact, #stage.compact #win-text { font-size: calc(var(--u) * 5.6); line-height: 1.2; max-width: calc(var(--u) * 316); }
+#stage.compact #over-score, #stage.compact #win-score { font-size: calc(var(--u) * 5); }
+/* na estreia o texto fica no céu e os botões abaixo do tapete vermelho */
+#stage.compact #win { padding: calc(var(--u) * 3) calc(var(--u) * 5) calc(var(--u) * 2.5); gap: calc(var(--u) * 1.6); }
+#stage.compact #win-text { font-size: calc(var(--u) * 5.2); }
+#stage.compact #win button { font-size: calc(var(--u) * 5.6); padding: calc(var(--u) * 2) calc(var(--u) * 5); }
+
+/* ---------- CELULAR EM PÉ ----------
+   O jogo é de paisagem. Com o aparelho em pé o palco gira 90° e ocupa a tela
+   toda: basta virar o celular, mesmo com a rotação automática travada. */
+@media (orientation: portrait) and (max-width: 600px) and (hover: none) and (pointer: coarse) {
+  #stage {
+    position: fixed; left: 50%; top: 50%;
+    width: min(100vh, calc(100vw * 336 / 144));
+    width: min(100dvh, calc(100dvw * 336 / 144));
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  #turn {
+    display: block; position: fixed; left: 50%; top: 8px; transform: translateX(-50%);
+    padding: 5px 10px; font-size: 13px; font-weight: 600; white-space: nowrap;
+    background: #17131f; color: #ffd23f; border: 2px solid #ffd23f;
+    pointer-events: none; animation: turn 5s forwards;
+  }
+}
+@keyframes turn { 0%, 80% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
