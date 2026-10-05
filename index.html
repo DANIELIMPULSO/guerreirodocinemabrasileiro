@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guerreiro do Cinema Brasileiro</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" width="336" height="144"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-l">
+      <div id="h-phase">FASE 1/5</div>
+      <div id="h-bar"><i></i></div>
+      <div id="h-stock"></div>
+    </div>
+    <div class="hud-r">
+      <div id="h-score">PÚBLICO 000000</div>
+      <div id="h-hi">RECORDE 000000</div>
+    </div>
+  </div>
+
+  <!-- MENU -->
+  <div id="menu" class="overlay">
+    <h1><span>GUERREIRO DO</span><b>CINEMA BRASILEIRO</b></h1>
+    <div id="pick">
+      <div id="chars"></div>
+      <div id="preview"><canvas id="pv" width="26" height="30"></canvas></div>
+    </div>
+    <div id="info">
+      <div id="info-name"></div>
+      <div id="info-film"></div>
+      <div id="info-quote"></div>
+      <div id="info-ab"></div>
+    </div>
+    <div id="menu-foot">
+      <button id="btn-play">▶ AÇÃO!</button>
+      <button id="btn-endless" class="hidden">» SESSÃO CONTÍNUA</button>
+      <span class="keys">◄ ► ▲ ▼ escolher · ESPAÇO pular · P pausa · M som</span>
+    </div>
+  </div>
+
+  <!-- CLAQUETE DE FASE -->
+  <div id="card" class="overlay hidden">
+    <div class="clap">
+      <div class="clap-top"></div>
+      <div class="clap-body">
+        <div id="card-n">CENA 1 / 5</div>
+        <div id="card-title">SERTÃO</div>
+        <div id="card-sub"></div>
+        <div id="card-new"></div>
+        <div class="blink">ESPAÇO para rodar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="over" class="overlay hidden">
+    <div class="big red">CORTA!</div>
+    <div class="small">PRODUÇÃO INTERROMPIDA POR</div>
+    <div id="over-cause"><img id="over-img" alt=""><span id="over-name"></span></div>
+    <p id="over-fact"></p>
+    <div id="over-score"></div>
+    <div class="row">
+      <button id="btn-retry">↻ REFAZER A CENA <small>[ESPAÇO]</small></button>
+      <button id="btn-menu">ELENCO <small>[ESC]</small></button>
+    </div>
+  </div>
+
+  <!-- VITÓRIA -->
+  <div id="win" class="overlay hidden">
+    <div class="big gold">ESTREIA!</div>
+    <div id="win-text"></div>
+    <div id="win-score"></div>
+    <div class="row">
+      <button id="btn-win-endless">» SESSÃO CONTÍNUA <small>[ESPAÇO]</small></button>
+      <button id="btn-win-menu">ELENCO <small>[ESC]</small></button>
+    </div>
+  </div>
+
+  <div id="pause" class="overlay hidden"><div class="big gold">PAUSA</div><div class="small">P para continuar</div></div>
+  <div id="toast" class="hidden"></div>
+  <div id="mute" title="Som (M)">♪</div>
+</div>
+
+<script src="js/sprites.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
